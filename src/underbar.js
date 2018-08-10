@@ -365,18 +365,23 @@
   // Calls the method named by functionOrKey on each value in the list.
   // Note: You will need to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
-    var result = [];
-
     if (typeof functionOrKey === 'function') {
-      for (var i = 0; i < collection.length; i++) {
-        result.push(functionOrKey.apply(collection[i]));
-      }
+      return _.map(collection, function(element) {
+        return functionOrKey.apply(element);
+      })
+    } else if (typeof collection[0] === 'string') {
+      return _.map(collection, function(element) {
+        return String.prototype[functionOrKey].apply(element);
+      })
+    } else if (Array.isArray(collection[0])) {
+      return _.map(collection, function(element) {
+        return Array.prototype[functionOrKey].apply(element);
+      })
     } else {
-      for (var i = 0; i < collection.length; i++) {
-        result.push(collection[i][String.prototype.functionOrKey]);
-      }
+      return _.map(collection, function(element) {
+        return Object.prototype[functionOrKey].apply(element);
+      })
     }
-    return result
   };
 
   // Sort the object's values by a criterion produced by an iterator.
@@ -384,6 +389,29 @@
   // of that string. For example, _.sortBy(people, 'name') should sort
   // an array of people by their name.
   _.sortBy = function(collection, iterator) {
+    var tempResult = [];
+    if (Array.isArray(collection)) {
+      if (typeof iterator === 'function') {
+        for (var i = 0; i < collection.length; i++) {
+          tempResult.push(iterator(collection[i]));
+        }
+        return tempResult.sort();
+      }
+      else {
+        for (var i = 0; i < collection.length; i++) {
+          tempResult.push(String.prototype[iterator].call(collection[i]));
+        }
+        return ;
+      }
+    }
+    else {
+      if (typeof iterator === 'function') {
+        
+      }
+      else {
+        
+      }
+    }
   };
 
   // Zip together two or more arrays with elements of the same index
@@ -392,6 +420,25 @@
   // Example:
   // _.zip(['a','b','c','d'], [1,2,3]) returns [['a',1], ['b',2], ['c',3], ['d',undefined]]
   _.zip = function() {
+    var temArray = []
+    for (var i = 0; i < arguments.length; i++) {
+      temArray.push(arguments[i].length);
+    }
+    var maxLength = Math.max.apply(null, temArray);
+
+    var zipped = [];
+    for (var l = 0; l < maxLength; l++) {
+      var innerArray = [];
+      for (var i = 0; i < arguments.length; i++) {
+        if (arguments[i][l] === undefined) {
+          innerArray.push(undefined);
+        } else {
+          innerArray.push(arguments[i][l]);
+        }
+      }
+      zipped.push(innerArray);
+    }
+    return zipped;
   };
 
   // Takes a multidimensional array and converts it to a one-dimensional array.
@@ -399,16 +446,57 @@
   //
   // Hint: Use Array.isArray to check if something is an array
   _.flatten = function(nestedArray, result) {
+    result = result || [];
+    for (var i = 0; i < nestedArray.length; i++) {
+      var value = nestedArray[i];
+      if (Array.isArray(value)) {
+        _.flatten(value, result);
+      } else {
+        result.push(value);
+      }
+    }
+    return result;
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
   _.intersection = function() {
+    var resultArray = [];
+    var firstLength = arguments[0].length;
+
+    for (var j = 0; j < firstLength; j++) {
+      for (var i = 1; i < arguments.length; i++) {
+        var temp = false;
+        if (_.contains(arguments[i], arguments[0][j])) {
+          temp = true;
+        }
+      } if (temp) {
+        resultArray.push(arguments[0][j]);
+      }
+    }
+    return resultArray;
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    var firstLength = arguments[0].length;
+    
+    for (var j = 0; j < firstLength; j++) {
+      for (var i = 1; i < arguments.length; i++) {
+        var temp = false;
+        if (_.contains(arguments[i], arguments[0][j])) {
+          temp = true;
+          break;
+        }
+      } if (temp) {
+        arguments[0][j] = undefined;
+      }
+    }
+
+    return _.filter(arguments[0], function(elem) {
+      return elem !== undefined;
+    });
   };
 
   // Returns a function, that, when invoked, will only be triggered at most once
@@ -417,5 +505,6 @@
   //
   // Note: This is difficult! It may take a while to implement.
   _.throttle = function(func, wait) {
+
   };
 }());
